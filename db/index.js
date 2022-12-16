@@ -4,18 +4,6 @@ const client = new Client("postgres://localhost:5432/juicebox-dev");
 
 // utility functions for the rest of the application
 // we can call them from seed file but also the main application
-async function getAllUsers() {
-  const { rows } = await client.query(
-    `SELECT id, username, name, location FROM users;`
-  );
-  return rows;
-}
-
-async function getAllPosts() {
-  try {
-    const { rows } = await client.query(`SELECT "authorId", title, content;`);
-  } catch (error) {}
-}
 
 async function createUser({ username, password, name, location }) {
   try {
@@ -30,21 +18,6 @@ async function createUser({ username, password, name, location }) {
       [username, password, name, location]
     );
     return user;
-  } catch (error) {
-    throw error;
-  }
-}
-
-async function createPost({ authorId, title, content }) {
-  try {
-    const {
-      rows: [post],
-    } = await client.query(
-      `INSERT INTO posts("authorId", title, content)
-            VALUES ($1, $2, $3)
-            RETURNING *;`,
-      [authorId, title, content]
-    );
   } catch (error) {
     throw error;
   }
@@ -71,8 +44,33 @@ async function updateUser(id, fields = {}) {
     `,
       Object.values(fields)
     );
-    // console.log("WTF", user);
+    console.log("WTF", user);
     return user;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function getAllUsers() {
+  const { rows } = await client.query(
+    `SELECT id, username, name, location FROM users;`
+  );
+  return rows;
+}
+
+async function createPost({ authorId, title, content }) {
+  try {
+    const {
+      rows: [post],
+    } = await client.query(
+      `INSERT INTO posts("authorId", title, content)
+            VALUES ($1, $2, $3)
+      RETURNING *;
+            `,
+      [authorId, title, content]
+    );
+    console.log(post);
+    return post;
   } catch (error) {
     throw error;
   }
@@ -80,7 +78,7 @@ async function updateUser(id, fields = {}) {
 
 async function updatePost(id, fields = {}) {
   console.log("these are our update fields", fields);
-  const setString = Object.key(fields)
+  const setString = Object.keys(fields)
     .map((key, index) => `"${key}"=$${index + 1}`)
     .join(",");
 
@@ -106,6 +104,15 @@ async function updatePost(id, fields = {}) {
   }
 }
 
+async function getAllPosts() {
+  try {
+    const { rows } = await client.query(`SELECT * FROM posts;`);
+    return rows;
+  } catch (error) {
+    throw error;
+  }
+}
+
 async function getPostsByUser(userId) {
   try {
     const { rows } = await client.query(`
@@ -123,11 +130,11 @@ async function getUserById(userId) {
     const {
       rows: [user],
     } = await client.query(`
-          SELECT id, password, username, name, location FROM user WHERE id = ${userId};
+          SELECT id, password, username, name, location FROM users WHERE id = ${userId};
             `);
     delete user.password;
 
-    if (rows.length === 0) {
+    if (user.length === 0) {
       return null;
     }
     user.post = await getPostsByUser(user.id);

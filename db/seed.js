@@ -3,6 +3,9 @@ const {
   client,
   createUser,
   getAllUsers,
+  getUserById,
+  getAllPosts,
+  updatePost,
   updateUser,
   createPost,
 } = require("./index");
@@ -80,23 +83,25 @@ async function createInitialUsers() {
 
 async function createInitialPosts() {
   try {
+    console.log("starting to create post");
     const [albert, sandra, glamgal] = await getAllUsers();
 
     await createPost({
-      authorId: albert.Id,
+      authorId: albert.id,
       title: "first post",
       content: "this is m first post. I love blogs and stuff.",
     });
     await createPost({
-      authorId: sandra.Id,
+      authorId: sandra.id,
       title: "My only post",
       content: "this is m first post. I love blogs and stuff.",
     });
     await createPost({
-      authorId: glamgal.Id,
+      authorId: glamgal.id,
       title: "the only best post",
       content: "this is m first post. I love blogs and stuff.",
     });
+    console.log("finished creating posts");
   } catch (error) {
     throw error;
   }
