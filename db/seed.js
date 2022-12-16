@@ -8,17 +8,25 @@ const {
   updatePost,
   updateUser,
   createPost,
+  // createTags,
 } = require("./index");
 
 //this function should call a query which drops all tables from our database
 async function dropTables() {
   try {
-    console.log("starting to drop tables...");
-    await client.query(`DROP TABLE IF EXISTS posts;`);
-    await client.query(`DROP TABLE IF EXISTS users;`);
-    console.log("finished dropping tables!");
+    console.log("Starting to drop tables...");
+
+    // have to make sure to drop in correct order
+    await client.query(`
+      DROP TABLE IF EXISTS post_tags;
+      DROP TABLE IF EXISTS tags;
+      DROP TABLE IF EXISTS posts;
+      DROP TABLE IF EXISTS users;
+    `);
+
+    console.log("Finished dropping tables!");
   } catch (error) {
-    console.error("error dropping tables");
+    console.error("Error dropping tables!");
     throw error;
   }
 }
@@ -45,6 +53,19 @@ async function createTables() {
           active BOOLEAN DEFAULT true       
               );`
     );
+    await client.query(
+      `CREATE TABLE tags(
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) UNIQUE NOT NULL
+        );`
+    );
+    await client.query(
+      `CREATE TABLE post_tags(
+          "postId" INTEGER REFERENCES posts(id) UNIQUE NOT NULL,
+          "tagId" INTEGER REFERENCES tags(id) UNIQUE NOT NULL
+        );`
+    );
+
     console.log("finished building tables!");
   } catch (error) {
     console.error("error building tables");
